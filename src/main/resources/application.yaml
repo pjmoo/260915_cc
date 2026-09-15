@@ -2,86 +2,69 @@ spring:
   application:
     name: 260915_cc
 
-  # --- PostgreSQL (spring-boot-starter-data-jpa, postgresql driver) ---
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:260915_cc}
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:cc}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
-    open-in-view: false
-    show-sql: false
     properties:
       hibernate:
         format_sql: true
 
-  # --- Redis (spring-boot-starter-data-redis) ---
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
 
-  # --- OAuth2 login (spring-boot-starter-security-oauth2-client) ---
-  # client-id/secret must come from the provider's OAuth app console.
   security:
     oauth2:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:}
-            client-secret: ${GOOGLE_CLIENT_SECRET:}
-            scope: openid, profile, email
+            client-id: ${GOOGLE_OAUTH2_CLIENT_ID}
+            client-secret: ${GOOGLE_OAUTH2_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
 
-  # --- Thymeleaf ---
   thymeleaf:
-    cache: true
+    cache: false
 
-  # --- Spring AI: Google GenAI chat + embedding model ---
   ai:
-    model:
-      chat: google-genai
-      embedding:
-        text: google-genai
     google:
       genai:
-        api-key: ${GOOGLE_GENAI_API_KEY:}
+        api-key: ${GOOGLE_GENAI_API_KEY}
         chat:
           model: gemini-2.5-flash
-          temperature: 0.7
+          temperature: 0.5
         embedding:
+          api-key: ${GOOGLE_GENAI_API_KEY}
           text:
             model: text-embedding-004
-
-    # --- Spring AI: pgvector vector store (dimensions must match the embedding model's output size) ---
     vectorstore:
       pgvector:
-        initialize-schema: true
-        schema-name: public
-        table-name: vector_store
         index-type: HNSW
         distance-type: COSINE_DISTANCE
         dimensions: 768
+        initialize-schema: true
+        schema-name: public
+        table-name: vector_store
 
-# --- Actuator + Micrometer/Prometheus ---
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus
+        include: health, info, prometheus
   endpoint:
     health:
       show-details: when-authorized
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
-# --- springdoc-openapi ---
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html

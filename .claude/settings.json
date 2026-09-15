@@ -1,0 +1,79 @@
+{
+  "attribution": {
+    "commit": ""
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); src=$(echo \"$in\" | jq -r '.source // \"unknown\"'); printf '[%s] event=SessionStart session=%s source=%s\\n' \"$ts\" \"$sid\" \"$src\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); p=$(echo \"$in\" | jq -r '.prompt // empty' | jq -Rr '.[0:50]'); printf '[%s] event=UserPromptSubmit session=%s prompt=\"%s\"\\n' \"$ts\" \"$sid\" \"$p\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); cmd=$(echo \"$in\" | jq -r '.tool_input.command // empty' | jq -Rr '.[0:50]'); printf '[%s] event=PreToolUse:Bash session=%s command=\"%s\"\\n' \"$ts\" \"$sid\" \"$cmd\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); tn=$(echo \"$in\" | jq -r '.tool_name // \"unknown\"'); fp=$(echo \"$in\" | jq -r '.tool_response.filePath // .tool_input.file_path // \"unknown\"'); printf '[%s] event=PostToolUse:%s session=%s file=%s\\n' \"$ts\" \"$tn\" \"$sid\" \"$fp\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); msg=$(echo \"$in\" | jq -r '.message // empty' | jq -Rr '.[0:50]'); printf '[%s] event=Notification session=%s message=\"%s\"\\n' \"$ts\" \"$sid\" \"$msg\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); trg=$(echo \"$in\" | jq -r '.trigger // \"unknown\"'); printf '[%s] event=PreCompact session=%s trigger=%s\\n' \"$ts\" \"$sid\" \"$trg\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ in=$(cat); ts=$(date '+%Y-%m-%d %H:%M:%S'); sid=$(echo \"$in\" | jq -r '.session_id // \"unknown\"'); tp=$(echo \"$in\" | jq -r '.transcript_path // empty'); result=$(jq -r 'select(.type==\"assistant\") | .message.content[]? | select(.type==\"text\") | .text' \"$tp\" 2>/dev/null | tail -1 | jq -Rr '.[0:50]'); printf '[%s] event=Stop session=%s result=\"%s\"\\n' \"$ts\" \"$sid\" \"$result\" >> \"$CLAUDE_PROJECT_DIR/claude.log\"; } 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
